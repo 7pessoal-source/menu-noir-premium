@@ -1,237 +1,273 @@
-# Menu Noir Admin - Sistema de Cardápio Digital SaaS
+# Menu Noir Premium - Sistema Multi-Restaurante
 
-Um painel administrativo profissional e escalável para gerenciar cardápios digitais de restaurantes. Sistema completo com autenticação robusta, isolamento de dados, CRUD completo e cardápio público integrado.
+Sistema SaaS simples para gerenciamento de cardápios digitais. Múltiplos restaurantes podem se cadastrar, fazer login e gerenciar seus próprios cardápios de forma isolada.
 
-## 🎯 Funcionalidades Principais
+## 🎯 Características
 
-### Painel Administrativo
-- ✅ **Autenticação Segura**: Email/senha com bcrypt + JWT
-- ✅ **Dashboard**: Estatísticas em tempo real (total de produtos, categorias, último item editado)
-- ✅ **Gerenciamento de Categorias**: CRUD completo com ordem de exibição
-- ✅ **Gerenciamento de Produtos**: CRUD com imagem, descrição, preço e status ativo/inativo
-- ✅ **Gerenciamento de Extras**: CRUD com tipos checkbox (múltiplos) e radio (único)
-- ✅ **Configurações do Restaurante**: Nome, logo, WhatsApp, horário de funcionamento e status
-- ✅ **Layout Sidebar**: Navegação intuitiva e responsiva
-
-### Cardápio Público
-- ✅ **Categorias em Carrossel**: Navegação horizontal com scroll suave
-- ✅ **Imagens Otimizadas**: Redimensionadas para melhor performance
-- ✅ **Seleção de Extras**: Suporte a checkbox (múltiplos) e radio (único)
-- ✅ **Carrinho Funcional**: Adicionar, remover, ajustar quantidade
-- ✅ **Integração WhatsApp**: Geração automática de mensagem com detalhes do pedido
-- ✅ **Status do Restaurante**: Alerta quando fechado
-- ✅ **Design Responsivo**: Funciona perfeitamente em desktop, tablet e mobile
+- ✅ **Multi-restaurante**: Um único sistema, múltiplos restaurantes
+- ✅ **Autenticação simples**: Email + senha (sem verificação)
+- ✅ **Isolamento de dados**: Cada restaurante vê apenas seus dados
+- ✅ **CRUD completo**: Categorias e produtos
+- ✅ **Cardápio público**: Cada restaurante tem seu link público `/menu/:slug`
+- ✅ **Upload de imagens**: Integração com Cloudinary
+- ✅ **Backend próprio**: Node.js + Express + Prisma + PostgreSQL
 
 ## 🏗️ Arquitetura
 
-### Stack Tecnológico
-- **Frontend**: React 19 + Tailwind CSS 4 + shadcn/ui
-- **Backend**: Express 4 + tRPC 11 + Drizzle ORM
-- **Banco de Dados**: MySQL/TiDB
-- **Autenticação**: JWT + bcrypt
-- **Build**: Vite + esbuild
+### Backend
+- **Node.js** + **Express** (REST API)
+- **Prisma ORM** (gerenciamento de banco)
+- **PostgreSQL** (banco de dados)
+- **JWT** (autenticação)
+- **bcrypt** (hash de senhas)
 
-### Estrutura de Dados
+### Frontend
+- **React 19** + **Vite**
+- **Tailwind CSS 4** + **shadcn/ui**
+- **Cloudinary** (upload de imagens)
+
+### Banco de Dados
 
 ```
-restaurants (id, nome, logo, whatsapp, status, hoursOfOperation)
-  ├── categories (id, restaurantId, nome, displayOrder, active)
-  ├── products (id, restaurantId, categoryId, nome, descrição, basePrice, image, active)
-  └── extras (id, restaurantId, categoryId, nome, price, type, active)
-users (id, email, password, name, restaurantId, role)
+restaurants
+├── id
+├── name
+├── slug (único)
+└── timestamps
+
+users
+├── id
+├── restaurant_id (FK)
+├── email (único)
+├── password_hash
+├── role
+└── timestamps
+
+categories
+├── id
+├── restaurant_id (FK)
+├── name
+├── order
+├── active
+└── timestamps
+
+products
+├── id
+├── restaurant_id (FK)
+├── category_id (FK)
+├── name
+├── description
+├── price
+├── image_url
+├── active
+└── timestamps
 ```
 
-### Segurança
-
-- **Isolamento Multi-Restaurante**: Cada query filtra por `restaurantId` da sessão
-- **Autenticação JWT**: Tokens seguros com expiração
-- **Password Hashing**: bcrypt com salt automático
-- **Validação de Entrada**: Zod em todas as rotas
-- **Proteção de Rotas**: Middleware `protectedProcedure` em operações sensíveis
-
-## 🚀 Como Rodar Localmente
+## 🚀 Como Rodar
 
 ### Pré-requisitos
-- Node.js 18+
-- pnpm 10+
-- MySQL 8+ ou TiDB
 
-### Instalação
+- Node.js 18+
+- PostgreSQL 14+
+- pnpm (ou npm/yarn)
+
+### Instalação Rápida
 
 ```bash
-# Clonar repositório
-git clone https://github.com/7pessoal-source/menu-noir.git
-cd menu-noir-admin
+# 1. Clonar repositório
+git clone https://github.com/7pessoal-source/menu-noir-premium.git
+cd menu-noir-premium
 
-# Instalar dependências
+# 2. Configurar .env
+cp .env.example .env
+# Edite .env com suas credenciais PostgreSQL e Cloudinary
+
+# 3. Instalar dependências do backend
+cd server
+pnpm install
+pnpm rebuild
+
+# 4. Gerar Prisma Client e criar banco
+pnpm exec prisma generate --schema=../prisma/schema.prisma
+pnpm exec prisma migrate dev --schema=../prisma/schema.prisma --name init
+
+# 5. Instalar dependências do frontend
+cd ..
 pnpm install
 
-# Configurar variáveis de ambiente
-cp .env.example .env
-# Editar .env com suas credenciais
-
-# Gerar e aplicar migrations
-pnpm drizzle-kit generate
-pnpm drizzle-kit migrate
-
-# Rodar em desenvolvimento
+# 6. Rodar backend (terminal 1)
+cd server
 pnpm dev
 
-# Rodar testes
-pnpm test
-
-# Build para produção
-pnpm build
-pnpm start
+# 7. Rodar frontend (terminal 2)
+cd ..
+pnpm dev
 ```
 
-### Variáveis de Ambiente
+Acesse:
+- Frontend: http://localhost:5173
+- Backend: http://localhost:3001
 
-```env
-# Banco de Dados
-DATABASE_URL=mysql://user:password@localhost:3306/menu_noir
+## 📋 API Endpoints
 
-# JWT
-JWT_SECRET=sua_chave_secreta_super_segura_aqui
+### Autenticação (Público)
 
-# Servidor
-NODE_ENV=development
-PORT=3000
+**POST /auth/register**
+```json
+{
+  "restaurantName": "Pizzaria do Zé",
+  "email": "contato@pizzariadoze.com",
+  "password": "senha123"
+}
 ```
 
-## 📋 Fluxo de Uso
-
-### Para o Restaurante (Admin)
-
-1. **Cadastro**: Criar conta com email e senha
-2. **Configurações**: Preencher dados do restaurante (nome, logo, WhatsApp, horário)
-3. **Categorias**: Criar categorias (Lanches, Bebidas, Sobremesas, etc)
-4. **Produtos**: Adicionar produtos com preço, descrição e imagem
-5. **Extras**: Criar adicionais (Bacon, Queijo, Molhos, etc)
-6. **Publicar**: Cardápio fica disponível em `/menu`
-
-### Para o Cliente (Public)
-
-1. **Acessar**: Ir para `/menu`
-2. **Navegar**: Filtrar por categoria (carrossel horizontal)
-3. **Selecionar**: Escolher produto e extras
-4. **Carrinho**: Adicionar itens, ajustar quantidade
-5. **Pedido**: Clicar em "Enviar Pedido" → WhatsApp com detalhes
-
-## 🧪 Testes
-
-```bash
-# Rodar todos os testes
-pnpm test
-
-# Rodar em modo watch
-pnpm test --watch
-
-# Gerar coverage
-pnpm test --coverage
+**POST /auth/login**
+```json
+{
+  "email": "contato@pizzariadoze.com",
+  "password": "senha123"
+}
 ```
 
-## 📊 Endpoints da API
+### Categorias (Protegido - requer token JWT)
+
+- **GET /categories** - Listar categorias
+- **POST /categories** - Criar categoria
+- **PUT /categories/:id** - Atualizar categoria
+- **DELETE /categories/:id** - Deletar categoria
+
+### Produtos (Protegido - requer token JWT)
+
+- **GET /products** - Listar produtos
+- **GET /products?categoryId=1** - Listar produtos por categoria
+- **POST /products** - Criar produto
+- **PUT /products/:id** - Atualizar produto
+- **DELETE /products/:id** - Deletar produto
+
+### Menu Público
+
+- **GET /menu/:slug** - Obter cardápio público do restaurante
+
+Exemplo: `GET /menu/pizzaria-do-ze`
+
+## 🔒 Segurança
+
+### Isolamento de Dados
+- Middleware `authMiddleware` valida JWT em todas rotas protegidas
+- JWT contém `restaurantId` do usuário
+- Todas queries filtram por `req.user.restaurantId`
+- Impossível acessar dados de outro restaurante
 
 ### Autenticação
-- `POST /api/auth/register` - Criar conta
-- `POST /api/auth/login` - Fazer login
-- `POST /api/auth/logout` - Fazer logout
+- Senhas com hash bcrypt (10 rounds)
+- JWT expira em 7 dias
+- Formato: `Authorization: Bearer <token>`
 
-### Restaurante (Protegido)
-- `GET /trpc/restaurant.get` - Obter dados
-- `PATCH /trpc/restaurant.update` - Atualizar dados
-
-### Categorias (Protegido)
-- `GET /trpc/categories.list` - Listar todas
-- `GET /trpc/categories.listActive` - Listar ativas (público)
-- `POST /trpc/categories.create` - Criar
-- `PATCH /trpc/categories.update` - Atualizar
-- `DELETE /trpc/categories.delete` - Deletar
-- `POST /trpc/categories.toggle` - Ativar/desativar
-
-### Produtos (Protegido)
-- `GET /trpc/products.list` - Listar todas
-- `GET /trpc/products.listActive` - Listar ativas (público)
-- `GET /trpc/products.listByCategory` - Listar por categoria (público)
-- `POST /trpc/products.create` - Criar
-- `PATCH /trpc/products.update` - Atualizar
-- `DELETE /trpc/products.delete` - Deletar
-- `POST /trpc/products.toggle` - Ativar/desativar
-
-### Extras (Protegido)
-- `GET /trpc/extras.list` - Listar todas
-- `GET /trpc/extras.listByCategory` - Listar por categoria (público)
-- `POST /trpc/extras.create` - Criar
-- `PATCH /trpc/extras.update` - Atualizar
-- `DELETE /trpc/extras.delete` - Deletar
-- `POST /trpc/extras.toggle` - Ativar/desativar
-
-### Dashboard (Protegido)
-- `GET /trpc/dashboard.stats` - Obter estatísticas
-
-## 🔧 Desenvolvimento
-
-### Adicionar Nova Funcionalidade
-
-1. **Schema**: Atualizar `drizzle/schema.ts`
-2. **Migration**: Rodar `pnpm drizzle-kit generate`
-3. **Database**: Adicionar helpers em `server/db.ts`
-4. **API**: Criar procedures em `server/routers.ts`
-5. **Frontend**: Criar componentes em `client/src/pages/`
-6. **Testes**: Escrever testes em `server/*.test.ts`
-
-### Estrutura de Pastas
+## 📁 Estrutura do Projeto
 
 ```
-menu-noir-admin/
-├── client/
-│   ├── src/
-│   │   ├── pages/          # Páginas (Admin, Menu, etc)
-│   │   ├── components/     # Componentes reutilizáveis
-│   │   ├── lib/            # Utilitários (tRPC client, etc)
-│   │   ├── _core/          # Contextos, hooks
-│   │   └── App.tsx         # Router principal
-│   └── public/             # Assets estáticos
-├── server/
-│   ├── routers.ts          # Procedures tRPC
-│   ├── db.ts               # Query helpers
-│   ├── auth.ts             # Autenticação (bcrypt, JWT)
-│   └── _core/              # Framework (context, oauth, etc)
-├── drizzle/
-│   ├── schema.ts           # Definição de tabelas
-│   └── migrations/         # SQL migrations
-├── shared/                 # Código compartilhado
-└── package.json
+menu-noir-premium/
+├── server/                 # Backend
+│   ├── routes/            # Rotas da API
+│   │   ├── auth.js        # Registro e login
+│   │   ├── categories.js  # CRUD categorias
+│   │   ├── products.js    # CRUD produtos
+│   │   └── menu.js        # Cardápio público
+│   ├── middleware/        # Middlewares
+│   │   └── auth.js        # Validação JWT
+│   ├── config/            # Configurações
+│   │   └── database.js    # Prisma Client
+│   ├── server.js          # Servidor Express
+│   └── package.json
+├── prisma/
+│   └── schema.prisma      # Schema do banco
+├── client/                # Frontend
+│   └── src/
+│       ├── pages/         # Páginas React
+│       ├── components/    # Componentes
+│       └── lib/           # Utilitários
+├── .env                   # Variáveis de ambiente
+├── SETUP.md              # Guia detalhado de setup
+└── README.md             # Este arquivo
 ```
 
-## 📝 Melhorias Futuras
+## 🧪 Testando a API
 
-- [ ] Sistema de histórico de pedidos
-- [ ] Relatórios e analytics
-- [ ] Upload de imagens direto no painel
-- [ ] Integração com múltiplos restaurantes
-- [ ] Sistema de cupons e promoções
-- [ ] Notificações em tempo real
-- [ ] App mobile nativa
-- [ ] Integração com sistemas de pagamento
+### Usando curl
 
-## 🤝 Contribuindo
+**Registrar:**
+```bash
+curl -X POST http://localhost:3001/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "restaurantName": "Pizzaria do Zé",
+    "email": "contato@pizzariadoze.com",
+    "password": "senha123"
+  }'
+```
 
-1. Fork o repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
+**Login:**
+```bash
+curl -X POST http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "contato@pizzariadoze.com",
+    "password": "senha123"
+  }'
+```
 
-## 📄 Licença
+**Criar categoria (com token):**
+```bash
+curl -X POST http://localhost:3001/categories \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  -d '{
+    "name": "Pizzas",
+    "order": 1
+  }'
+```
 
-MIT License - veja LICENSE para detalhes
+## 🐳 Deploy
+
+### Opções Recomendadas
+
+**Backend + Banco:**
+- Railway (mais fácil)
+- Render
+- Fly.io
+
+**Frontend:**
+- Vercel
+- Netlify
+- Cloudflare Pages
+
+### Configuração PostgreSQL
+
+**Opções gratuitas:**
+- Neon (PostgreSQL serverless)
+- Supabase
+- Railway
+
+## 📖 Documentação Completa
+
+Para instruções detalhadas de setup, API e deploy, veja [SETUP.md](./SETUP.md)
+
+## ✅ Checklist de Implementação
+
+- ✅ Schema Prisma limpo
+- ✅ Middleware de autenticação simples
+- ✅ Sem tRPC
+- ✅ Sem SQLite
+- ✅ Todas queries usam `restaurant_id`
+- ✅ Login funciona sem verificação de email
+- ✅ Isolamento de dados garantido
+- ✅ Rotas REST simples
+- ✅ JWT + bcrypt
 
 ## 📞 Suporte
 
-Para suporte, abra uma issue no GitHub ou entre em contato através do WhatsApp.
+Para dúvidas ou problemas, abra uma issue no GitHub.
 
 ---
 
-**Desenvolvido com ❤️ por Menu Noir**
+**Desenvolvido com foco em simplicidade e funcionalidade** 🚀
