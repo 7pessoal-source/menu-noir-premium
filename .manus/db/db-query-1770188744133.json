@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO restaurants (id, name, logo, whatsapp, hoursOfOperation, status, createdAt, updatedAt) \nVALUES (1, 'Menu Noir', 'https://via.placeholder.com/200', '5511999999999', '10:00-22:00', 'open', NOW(), NOW())\nON DUPLICATE KEY UPDATE name=VALUES(name), updatedAt=NOW();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 31jjHSQabzfCU1N.root --database 8wfvDnRbBBeJ9xvkfFpaft --execute INSERT INTO restaurants (id, name, logo, whatsapp, hoursOfOperation, status, createdAt, updatedAt) \nVALUES (1, 'Menu Noir', 'https://via.placeholder.com/200', '5511999999999', '10:00-22:00', 'open', NOW(), NOW())\nON DUPLICATE KEY UPDATE name=VALUES(name), updatedAt=NOW();",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 372
+}
